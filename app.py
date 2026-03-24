@@ -4,47 +4,57 @@ import plotly.express as px
 
 st.set_page_config(page_title="Cabina di Regia ATS Medio Molise", layout="wide")
 st.title("📊 Cabina di Regia: ATS Medio Molise")
-st.markdown("Monitoraggio FUA 2026, LEPS e Progetti di Inclusione Sociale")
+st.markdown("Monitoraggio FUA 2026, LEPS, Infrastrutture e Fundraising")
 
 try:
-    # Lettura dei dati
+    # Lettura dei dati dai 4 fogli
     df_budget = pd.read_excel("dati_ats.xlsx", sheet_name="Budget_FUA")
     df_impatto = pd.read_excel("dati_ats.xlsx", sheet_name="Target_LEPS")
     df_progetto = pd.read_excel("dati_ats.xlsx", sheet_name="Progetti_ATS")
+    df_bandi = pd.read_excel("dati_ats.xlsx", sheet_name="Pipeline_Bandi")
 
-    # Creazione delle schede (Tabs)
-    tab1, tab2 = st.tabs(["🛡️ Area Welfare e LEPS", "🏢 Area Progetti e Infrastrutture Sociali"])
+    # Creazione di 3 schede (Tabs)
+    tab1, tab2, tab3 = st.tabs(["🛡️ Area Welfare e LEPS", "🏢 Infrastrutture Sociali", "💶 Pipeline Bandi e Fundraising"])
 
+    # --- TAB 1: WELFARE ---
     with tab1:
-        st.header("Gestione Fondo Unico d'Ambito (FUA 2026) e Target di Servizio")
+        st.header("Gestione Fondo Unico d'Ambito (FUA) e Target")
         col1, col2 = st.columns(2)
-        
         with col1:
             st.subheader("Ripartizione Finanziaria FUA")
-            # Legge in automatico i dati indipendentemente dal titolo della colonna
             fig_budget = px.pie(df_budget, values=df_budget.columns[2], names=df_budget.columns[0], hole=0.4)
             st.plotly_chart(fig_budget, use_container_width=True)
-            
         with col2:
             st.subheader("Avanzamento Livelli Essenziali (LEPS)")
-            # Assegna la prima colonna all'asse X e le restanti all'asse Y in automatico
             fig_impatto = px.line(df_impatto, x=df_impatto.columns[0], y=df_impatto.columns[1:], markers=True)
             st.plotly_chart(fig_impatto, use_container_width=True)
 
+    # --- TAB 2: PROGETTI E INFRASTRUTTURE ---
     with tab2:
-        st.header("Avanzamento Progetti e Infrastrutture PNRR/FSE+")
-        st.markdown("Monitoraggio dei centri territoriali e dei servizi di inclusione.")
-        
-        # Converte in automatico le date (colonne 2 e 3)
+        st.header("Avanzamento Progetti ATS")
         df_progetto[df_progetto.columns[1]] = pd.to_datetime(df_progetto[df_progetto.columns[1]])
         df_progetto[df_progetto.columns[2]] = pd.to_datetime(df_progetto[df_progetto.columns[2]])
-        
-        # Crea il Gantt leggendo le colonne per posizione (0=Task, 1=Inizio, 2=Fine, 3=Completamento)
         fig_gantt = px.timeline(df_progetto, x_start=df_progetto.columns[1], x_end=df_progetto.columns[2], 
                                 y=df_progetto.columns[0], color=df_progetto.columns[3],
-                                color_continuous_scale="Blues", title="Cronoprogramma Interventi ATS")
+                                color_continuous_scale="Blues", title="Cronoprogramma Interventi")
         fig_gantt.update_yaxes(autorange="reversed")
         st.plotly_chart(fig_gantt, use_container_width=True)
 
+    # --- TAB 3: FUNDRAISING E BANDI EUROPEI ---
+    with tab3:
+        st.header("Radar Finanziamenti e Co-progettazione")
+        st.markdown("Monitoraggio dei bandi in corso, fondi europei intercettati e stato delle candidature.")
+        
+        col3, col4 = st.columns([2, 1])
+        with col3:
+            # Mostra la tabella interattiva dei bandi
+            st.dataframe(df_bandi, use_container_width=True, hide_index=True)
+        with col4:
+            # Grafico a barre per vedere il potenziale economico per "Stato"
+            st.subheader("Potenziale Economico")
+            fig_bandi = px.bar(df_bandi, x=df_bandi.columns[4], y=df_bandi.columns[3], 
+                               color=df_bandi.columns[4], title="Budget Richiesto per Stato (€)")
+            st.plotly_chart(fig_bandi, use_container_width=True)
+
 except Exception as e:
-    st.error(f"⚠️ Errore di lettura: {e}. Controlla che il file Excel sia salvato e chiuso.")
+    st.error(f"⚠️ Errore di lettura: {e}. Controlla che i nomi dei fogli e il file Excel siano corretti e salvati.")
