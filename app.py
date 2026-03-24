@@ -7,7 +7,7 @@ st.title("📊 Cabina di Regia: ATS Medio Molise")
 st.markdown("Monitoraggio FUA 2026, LEPS e Progetti di Inclusione Sociale")
 
 try:
-    # Lettura dei dati (Assicurati che i nomi dei fogli siano esatti in Excel)
+    # Lettura dei dati
     df_budget = pd.read_excel("dati_ats.xlsx", sheet_name="Budget_FUA")
     df_impatto = pd.read_excel("dati_ats.xlsx", sheet_name="Target_LEPS")
     df_progetto = pd.read_excel("dati_ats.xlsx", sheet_name="Progetti_ATS")
@@ -21,22 +21,27 @@ try:
         
         with col1:
             st.subheader("Ripartizione Finanziaria FUA")
-            fig_budget = px.pie(df_budget, values="Budget 2026", names="Voce di Finanziamento", hole=0.4)
+            # Legge in automatico i dati indipendentemente dal titolo della colonna
+            fig_budget = px.pie(df_budget, values=df_budget.columns[2], names=df_budget.columns[0], hole=0.4)
             st.plotly_chart(fig_budget, use_container_width=True)
             
         with col2:
             st.subheader("Avanzamento Livelli Essenziali (LEPS)")
-            fig_impatto = px.line(df_impatto, x="Trimestre", y=["Assunzioni Assistenti Sociali", "Famiglie PIPPI Prese in Carico"], markers=True)
+            # Assegna la prima colonna all'asse X e le restanti all'asse Y in automatico
+            fig_impatto = px.line(df_impatto, x=df_impatto.columns[0], y=df_impatto.columns[1:], markers=True)
             st.plotly_chart(fig_impatto, use_container_width=True)
 
     with tab2:
         st.header("Avanzamento Progetti e Infrastrutture PNRR/FSE+")
         st.markdown("Monitoraggio dei centri territoriali e dei servizi di inclusione.")
         
-        df_progetto["Inizio"] = pd.to_datetime(df_progetto["Inizio"])
-        df_progetto["Fine"] = pd.to_datetime(df_progetto["Fine"])
+        # Converte in automatico le date (colonne 2 e 3)
+        df_progetto[df_progetto.columns[1]] = pd.to_datetime(df_progetto[df_progetto.columns[1]])
+        df_progetto[df_progetto.columns[2]] = pd.to_datetime(df_progetto[df_progetto.columns[2]])
         
-        fig_gantt = px.timeline(df_progetto, x_start="Inizio", x_end="Fine", y="Task", color="Completamento",
+        # Crea il Gantt leggendo le colonne per posizione (0=Task, 1=Inizio, 2=Fine, 3=Completamento)
+        fig_gantt = px.timeline(df_progetto, x_start=df_progetto.columns[1], x_end=df_progetto.columns[2], 
+                                y=df_progetto.columns[0], color=df_progetto.columns[3],
                                 color_continuous_scale="Blues", title="Cronoprogramma Interventi ATS")
         fig_gantt.update_yaxes(autorange="reversed")
         st.plotly_chart(fig_gantt, use_container_width=True)
