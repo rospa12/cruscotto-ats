@@ -29,6 +29,7 @@ try:
         with col1:
             st.subheader("Ripartizione Finanziaria FUA")
             fig_budget = px.pie(df_budget, values=df_budget.columns[2], names=df_budget.columns[0], hole=0.4)
+	    fig_budget.update_traces(textfont_size=20)
             st.plotly_chart(fig_budget, use_container_width=True)
         with col2:
             st.subheader("Avanzamento Livelli Essenziali (LEPS)")
